@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -51,6 +52,8 @@ data class OverlayElement(
     val snappedAnchor: Int = -1,
     val fontSizeSp: Float = 14f,
     val colorArgb: Long = 0xFFFFFFFF,
+    /** 0 标准 / 1 手写 / 2 衬线。 */
+    val fontStyle: Int = 0,
 )
 
 /** 九宫锚点：四角 + 四边中点 + 中心。 */
@@ -194,6 +197,11 @@ fun CanvasOverlay(
                             element.content,
                             fontSize = element.fontSizeSp.sp,
                             fontWeight = FontWeight.Medium,
+                            fontFamily = when (element.fontStyle) {
+                                1 -> FontFamily.Monospace
+                                2 -> FontFamily.Serif
+                                else -> FontFamily.Default
+                            },
                             color = Color(element.colorArgb),
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))

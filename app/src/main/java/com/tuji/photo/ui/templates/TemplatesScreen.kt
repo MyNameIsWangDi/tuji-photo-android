@@ -44,6 +44,7 @@ fun TemplatesScreen(
     onBack: () -> Unit,
     onOpenPreview: (String) -> Unit = {},
     onOpenMine: () -> Unit = {},
+    onOpenRecent: () -> Unit = {},
 ) {
     val palette = LocalAppPalette.current
     var category by remember { mutableIntStateOf(0) }
@@ -161,6 +162,7 @@ fun TemplatesScreen(
         com.tuji.photo.ui.components.MainTabBar(
             active = com.tuji.photo.ui.components.MainTab.TEMPLATES,
             onGallery = onBack,
+            onEdit = onOpenRecent,
             onMine = onOpenMine,
         )
     }

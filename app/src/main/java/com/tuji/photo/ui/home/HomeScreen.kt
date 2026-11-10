@@ -49,6 +49,7 @@ fun HomeScreen(
     onOpenEditor: (Long, String) -> Unit,
     onOpenTemplates: () -> Unit,
     onOpenMine: () -> Unit = {},
+    onOpenRecent: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val palette = LocalAppPalette.current
@@ -180,6 +181,7 @@ fun HomeScreen(
         // pill 标签栏
         MainTabBar(
             active = MainTab.GALLERY,
+            onEdit = onOpenRecent,
             onTemplates = onOpenTemplates,
             onMine = onOpenMine,
         )

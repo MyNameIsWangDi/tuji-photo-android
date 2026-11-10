@@ -28,6 +28,7 @@ enum class MainTab(val label: String) {
 fun MainTabBar(
     active: MainTab,
     onGallery: () -> Unit = {},
+    onEdit: () -> Unit = {},
     onTemplates: () -> Unit = {},
     onMine: () -> Unit = {},
 ) {
@@ -59,6 +60,7 @@ fun MainTabBar(
                         .clickable {
                             when (tab) {
                                 MainTab.GALLERY -> onGallery()
+                                MainTab.EDIT -> onEdit()
                                 MainTab.TEMPLATES -> onTemplates()
                                 MainTab.MINE -> onMine()
                                 else -> {}

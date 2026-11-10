@@ -23,14 +23,19 @@ enum class EditorTool(val label: String) {
     BORDER("边框"), CROP("裁剪"), TEXT("文字"),
 }
 
-/** 调色四参数，范围 -100..100。 */
+/** 调色参数，范围 -100..100。 */
 data class Adjustments(
     val brightness: Float = 0f,
     val contrast: Float = 0f,
     val saturation: Float = 0f,
     val temperature: Float = 0f,
+    /** 清晰度（对比度近似 + 轻锐化观感）。 */
+    val sharpness: Float = 0f,
+    /** 色相偏移 -100..100。 */
+    val hue: Float = 0f,
 ) {
-    fun toJson(): String = "[$brightness,$contrast,$saturation,$temperature]"
+    fun toJson(): String =
+        "[$brightness,$contrast,$saturation,$temperature,$sharpness,$hue]"
 
     companion object {
         fun fromJson(raw: String): Adjustments = runCatching {
@@ -41,6 +46,8 @@ data class Adjustments(
                 nums.getOrElse(1) { 0f },
                 nums.getOrElse(2) { 0f },
                 nums.getOrElse(3) { 0f },
+                nums.getOrElse(4) { 0f },
+                nums.getOrElse(5) { 0f },
             )
         }.getOrDefault(Adjustments())
     }
@@ -75,6 +82,8 @@ class EditorViewModel @Inject constructor(
     val contrast = MutableStateFlow(0f)
     val saturation = MutableStateFlow(0f)
     val temperature = MutableStateFlow(0f)
+    val sharpness = MutableStateFlow(0f)
+    val hue = MutableStateFlow(0f)
 
     // 滤镜
     val selectedFilter = MutableStateFlow(-1)
@@ -128,10 +137,10 @@ class EditorViewModel @Inject constructor(
     /** 设计稿 08 屏的贴纸图标集。 */
     val stickerGlyphs = listOf("★", "♥", "⌖", "日", "▣")
 
-    private var nextOverlayId = 1L
+    /** 文字颜色（与文字面板色点一致）。 */
+    val textColors = listOf(0xFFFFFFFFL, 0xFF101014L, 0xFFE8B04BL, 0xFFE87C9CL)
 
-    /** 设计稿 08 屏的贴纸图标集。 */
-    val stickerGlyphs = listOf("★", "♥", "⌖", "日", "▣")
+    private var nextOverlayId = 1L
 
     /** 边框面板「+ 文字」：把文字拖入画布并开启自由摆放。 */
     fun addTextOverlay(content: String, sizeSp: Float = 16f) {
@@ -142,10 +151,25 @@ class EditorViewModel @Inject constructor(
             x = 0.5f, y = 0.5f,
             snappedAnchor = 4,
             fontSizeSp = sizeSp,
+            colorArgb = textColors[textColorIndex.value.coerceIn(0, textColors.lastIndex)],
+            fontStyle = textFont.value,
         )
         overlays.value = overlays.value + element
         selectedOverlayId.value = element.id
         freeMode.value = true
+    }
+
+    /** 把字体 / 颜色 / 大小应用到选中的文字元素。 */
+    fun applyTextStyleToSelection() {
+        val id = selectedOverlayId.value ?: return
+        overlays.value = overlays.value.map { element ->
+            if (element.id != id) element
+            else element.copy(
+                fontSizeSp = textSize.value,
+                colorArgb = textColors[textColorIndex.value.coerceIn(0, textColors.lastIndex)],
+                fontStyle = textFont.value,
+            )
+        }
     }
 
     /** 边框面板「+ 贴纸」：贴纸进入画布并自动吸附中心。 */
@@ -261,7 +285,8 @@ class EditorViewModel @Inject constructor(
     }
 
     fun adjustments(): Adjustments = Adjustments(
-        brightness.value, contrast.value, saturation.value, temperature.value
+        brightness.value, contrast.value, saturation.value, temperature.value,
+        sharpness.value, hue.value,
     )
 
     fun saveProject(onSaved: () -> Unit) {

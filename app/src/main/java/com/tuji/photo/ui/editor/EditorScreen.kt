@@ -45,7 +45,7 @@ import com.tuji.photo.ui.icons.PhotoIcon
 import com.tuji.photo.ui.icons.PhotoIconName
 import com.tuji.photo.ui.theme.LocalAppPalette
 
-/** 根据四参数 + 滤镜预设合成实时预览 ColorMatrix（真实生效）。 */
+/** 根据参数 + 滤镜预设合成实时预览 ColorMatrix（真实生效）。 */
 fun previewMatrix(
     adj: Adjustments,
     preset: FilterPreset?,
@@ -55,7 +55,9 @@ fun previewMatrix(
     val satBase = 1f + adj.saturation / 100f
     val satFactor = if (preset == null) satBase else 1f + (preset.saturationMul - 1f) * k * satBase
 
-    val scale = 1f + adj.contrast / 200f + (preset?.contrastAdd ?: 0f) / 200f * k
+    // 清晰度：以对比度增益近似（ColorMatrix 无法做邻域锐化）
+    val sharpen = 1f + adj.sharpness / 100f
+    val scale = (1f + adj.contrast / 200f + (preset?.contrastAdd ?: 0f) / 200f * k) * sharpen
     val offset = 128f * (1f - scale)
     val brightOffset = adj.brightness * 2.55f
     val temp = adj.temperature + (preset?.temperatureAdd ?: 0f) * k
@@ -74,6 +76,25 @@ fun previewMatrix(
     val sat = AndroidColorMatrix().apply { setToSaturation(satFactor.coerceIn(0f, 2f)) }
     val out = AndroidColorMatrix()
     out.setConcat(base, sat)
+
+    // 色相偏移：RGB 通道按角度做色彩旋转
+    if (adj.hue != 0f) {
+        val angle = adj.hue / 100f * 60f          // ±60°
+        val rad = Math.toRadians(angle.toDouble())
+        val cosA = kotlin.math.cos(rad).toFloat()
+        val sinA = kotlin.math.sin(rad).toFloat()
+        val m = 1f / 3f
+        val oneMinus = 1f - cosA
+        val hueMatrix = AndroidColorMatrix(
+            floatArrayOf(
+                cosA + oneMinus * m, oneMinus * m, oneMinus * m, 0f, 0f,
+                m, cosA + oneMinus * m, m, 0f, 0f,
+                m, m, cosA + oneMinus * m, 0f, 0f,
+                0f, 0f, 0f, 1f, 0f,
+            )
+        )
+        out.setConcat(hueMatrix, out)
+    }
     return ColorMatrix(out.values)
 }
 
@@ -106,6 +127,8 @@ fun EditorScreen(
         viewModel.contrast.collectAsState().value,
         viewModel.saturation.collectAsState().value,
         viewModel.temperature.collectAsState().value,
+        viewModel.sharpness.collectAsState().value,
+        viewModel.hue.collectAsState().value,
     )
     val selectedFilter by viewModel.selectedFilter.collectAsState()
     val filterStrength by viewModel.filterStrength.collectAsState()

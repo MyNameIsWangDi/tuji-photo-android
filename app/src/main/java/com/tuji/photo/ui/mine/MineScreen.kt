@@ -60,6 +60,7 @@ class MineViewModel @Inject constructor(
 fun MineScreen(
     onOpenSettings: () -> Unit,
     onOpenTemplates: () -> Unit,
+    onOpenRecent: () -> Unit = {},
     viewModel: MineViewModel = hiltViewModel(),
 ) {
     val palette = LocalAppPalette.current
@@ -162,7 +163,11 @@ fun MineScreen(
         }
 
         Spacer(Modifier.weight(1f))
-        MainTabBar(active = MainTab.MINE)
+        MainTabBar(
+            active = MainTab.MINE,
+            onEdit = onOpenRecent,
+            onTemplates = onOpenTemplates,
+        )
     }
 }
 

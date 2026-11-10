@@ -11,6 +11,7 @@ import com.tuji.photo.data.model.TemplateCatalog
 import com.tuji.photo.ui.editor.EditorScreen
 import com.tuji.photo.ui.home.HomeScreen
 import com.tuji.photo.ui.mine.MineScreen
+import com.tuji.photo.ui.recent.RecentScreen
 import com.tuji.photo.ui.settings.SettingsScreen
 import com.tuji.photo.ui.templates.TemplatePreviewScreen
 import com.tuji.photo.ui.templates.TemplatesScreen
@@ -21,6 +22,7 @@ object Routes {
     const val TEMPLATE_PREVIEW = "templates/preview?templateId={templateId}"
     const val MINE = "mine"
     const val SETTINGS = "settings"
+    const val RECENT = "recent"
     const val EDITOR = "editor?projectId={projectId}&imageUri={imageUri}"
 
     fun editor(projectId: Long, imageUri: String) =
@@ -40,6 +42,7 @@ fun PhotoNavHost() {
                 },
                 onOpenTemplates = { navController.navigate(Routes.TEMPLATES) },
                 onOpenMine = { navController.navigate(Routes.MINE) },
+                onOpenRecent = { navController.navigate(Routes.RECENT) },
             )
         }
         composable(Routes.TEMPLATES) {
@@ -47,6 +50,7 @@ fun PhotoNavHost() {
                 onBack = { navController.popBackStack() },
                 onOpenPreview = { id -> navController.navigate(Routes.templatePreview(id)) },
                 onOpenMine = { navController.navigate(Routes.MINE) },
+                onOpenRecent = { navController.navigate(Routes.RECENT) },
             )
         }
         composable(
@@ -68,8 +72,16 @@ fun PhotoNavHost() {
                 )
             }
         }
-        composable(Routes.MINE) {
-            MineScreen(
+        composable(Routes.RECENT) {
+            RecentScreen(
+                onOpenEditor = { projectId, imageUri ->
+                    navController.navigate(Routes.editor(projectId, imageUri))
+                },
+                onOpenTemplates = { navController.navigate(Routes.TEMPLATES) },
+                onOpenMine = { navController.navigate(Routes.MINE) },
+            )
+        }
+        composable(Routes.MINE) {            MineScreen(
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
                 onOpenTemplates = { navController.navigate(Routes.TEMPLATES) },
             )

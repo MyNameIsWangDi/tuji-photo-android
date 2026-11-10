@@ -116,20 +116,48 @@ internal fun AdjustPanel(viewModel: EditorViewModel) {
     val contrast by viewModel.contrast.collectAsState()
     val saturation by viewModel.saturation.collectAsState()
     val temperature by viewModel.temperature.collectAsState()
+    val sharpness by viewModel.sharpness.collectAsState()
+    val hue by viewModel.hue.collectAsState()
 
     SecondaryChipRow(
         options = listOf("光效", "色彩", "细节", "曲线", "HSL"),
         selected = section,
         onSelect = { section = it },
     )
-    ParamSlider("亮度", brightness, { viewModel.brightness.value = it },
-        valueText = formatSigned(brightness))
-    ParamSlider("对比度", contrast, { viewModel.contrast.value = it },
-        valueText = formatSigned(contrast))
-    ParamSlider("饱和度", saturation, { viewModel.saturation.value = it },
-        valueText = formatSigned(saturation))
-    ParamSlider("色温", temperature, { viewModel.temperature.value = it },
-        valueText = formatSigned(temperature))
+
+    // 二级分组决定当前显示的参数（设计稿 02 屏）
+    when (section) {
+        0 -> {
+            ParamSlider("亮度", brightness, { viewModel.brightness.value = it },
+                valueText = formatSigned(brightness))
+            ParamSlider("对比度", contrast, { viewModel.contrast.value = it },
+                valueText = formatSigned(contrast))
+        }
+        1 -> {
+            ParamSlider("饱和度", saturation, { viewModel.saturation.value = it },
+                valueText = formatSigned(saturation))
+            ParamSlider("色温", temperature, { viewModel.temperature.value = it },
+                valueText = formatSigned(temperature))
+        }
+        2 -> {
+            ParamSlider("清晰度", sharpness, { viewModel.sharpness.value = it },
+                valueText = formatSigned(sharpness))
+            ParamSlider("对比度", contrast, { viewModel.contrast.value = it },
+                valueText = formatSigned(contrast))
+        }
+        3 -> {
+            ParamSlider("亮度", brightness, { viewModel.brightness.value = it },
+                valueText = formatSigned(brightness))
+            ParamSlider("清晰度", sharpness, { viewModel.sharpness.value = it },
+                valueText = formatSigned(sharpness))
+        }
+        else -> {
+            ParamSlider("色相", hue, { viewModel.hue.value = it },
+                valueText = formatSigned(hue))
+            ParamSlider("饱和度", saturation, { viewModel.saturation.value = it },
+                valueText = formatSigned(saturation))
+        }
+    }
     Text("长按画布可对比原图", fontSize = 12.sp, color = palette.textTertiary)
 }
 
@@ -411,8 +439,7 @@ internal fun TextPanel(viewModel: EditorViewModel) {
             .border(1.dp, palette.hairline, RoundedCornerShape(8.dp))
             .clickable { viewModel.addTextOverlay(content, size) }
             .padding(12.dp),
-    )
-    // 贴纸图标行（设计稿 08 屏）
+    )    // 贴纸图标行（设计稿 08 屏）
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         viewModel.stickerGlyphs.forEach { glyph ->
             Box(
@@ -467,7 +494,10 @@ internal fun TextPanel(viewModel: EditorViewModel) {
                     .clip(RoundedCornerShape(16.dp))
                     .background(if (selected) palette.accent else palette.background)
                     .border(1.dp, if (selected) palette.accent else palette.hairline, RoundedCornerShape(16.dp))
-                    .clickable { viewModel.textFont.value = i }
+                    .clickable {
+                        viewModel.textFont.value = i
+                        viewModel.applyTextStyleToSelection()
+                    }
                     .padding(horizontal = 14.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -488,11 +518,17 @@ internal fun TextPanel(viewModel: EditorViewModel) {
                         if (i == colorIndex) palette.accent else palette.hairline,
                         CircleShape,
                     )
-                    .clickable { viewModel.textColorIndex.value = i },
+                    .clickable {
+                        viewModel.textColorIndex.value = i
+                        viewModel.applyTextStyleToSelection()
+                    },
             )
         }
     }
-    ParamSlider("大小", size, { viewModel.textSize.value = it },
+    ParamSlider("大小", size, {
+        viewModel.textSize.value = it
+        viewModel.applyTextStyleToSelection()
+    },
         valueText = "${size.toInt()}", valueRange = 8f..48f)
     Text("拖动可调整文字位置，靠近定位点自动吸附", fontSize = 11.sp, color = palette.textTertiary)
 }
