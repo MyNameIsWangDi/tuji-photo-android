@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 取景框 -->
+    <path
+        android:pathData="M34,40 L34,34 A2,2 0 0 1 36,32 L42,32 M66,32 L72,32 A2,2 0 0 1 74,34 L74,40 M74,68 L74,74 A2,2 0 0 1 72,76 L66,76 M42,76 L36,76 A2,2 0 0 1 34,74 L34,68"
+        android:strokeColor="#F5F5F7"
+        android:strokeWidth="3"
+        android:strokeLineCap="round" />
+    <!-- 山形照片 -->
+    <path
+        android:pathData="M40,64 L48,52 L54,60 L59,54 L68,64 Z"
+        android:fillColor="#F5F5F7" />
+</vector>
