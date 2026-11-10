@@ -76,6 +76,7 @@ class EditorViewModel @Inject constructor(
 
     val activeTool = MutableStateFlow<EditorTool?>(null)
     val showExport = MutableStateFlow(false)
+    val showOriginal = MutableStateFlow(false)
 
     // 调色
     val brightness = MutableStateFlow(0f)

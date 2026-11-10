@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -121,6 +123,7 @@ fun EditorScreen(
     val cropRect by viewModel.cropRect.collectAsState()
     val cropAspect by viewModel.cropAspectLocked.collectAsState()
     val showExport by viewModel.showExport.collectAsState()
+    val showOriginal by viewModel.showOriginal.collectAsState()
 
     val adj = Adjustments(
         viewModel.brightness.collectAsState().value,
@@ -211,10 +214,16 @@ fun EditorScreen(
                                     bitmap = bmp,
                                     contentDescription = "照片",
                                     contentScale = ContentScale.Fit,
-                                    colorFilter = ColorFilter.colorMatrix(matrix),
-                                    modifier = Modifier.graphicsLayer {
-                                        rotationZ = rotation * 90f
-                                    },
+                                    colorFilter = if (showOriginal) null
+                                    else ColorFilter.colorMatrix(matrix),
+                                    modifier = Modifier
+                                        .graphicsLayer { rotationZ = rotation * 90f }
+                                        .pointerInput(Unit) {
+                                            detectTapGestures(
+                                                onLongPress = { viewModel.showOriginal.value = true },
+                                                onTap = { viewModel.showOriginal.value = false },
+                                            )
+                                        },
                                 )
                                 CanvasOverlay(
                                     elements = overlays,
