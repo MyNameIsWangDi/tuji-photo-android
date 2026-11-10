@@ -35,12 +35,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -54,7 +55,6 @@ import com.tuji.photo.ui.editor.previewMatrix
 import com.tuji.photo.ui.icons.PhotoIcon
 import com.tuji.photo.ui.icons.PhotoIconName
 import com.tuji.photo.ui.theme.LocalAppPalette
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -71,7 +71,7 @@ fun ExportScreen(
 ) {
     val palette = LocalAppPalette.current
     val context = LocalContext.current
-    val scope = CoroutineScope(Dispatchers.Main)
+    val scope = rememberCoroutineScope()
     val bitmap by viewModel.bitmap.collectAsState()
     val overlays by viewModel.overlays.collectAsState()
     val borderStyle by viewModel.borderStyle.collectAsState()
@@ -147,7 +147,7 @@ fun ExportScreen(
                     androidx.compose.foundation.Image(
                         bitmap = bmp,
                         contentDescription = "预览",
-                        contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                        contentScale = ContentScale.Fit,
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(1f),
