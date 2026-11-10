@@ -24,10 +24,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -44,6 +40,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.tuji.photo.ui.components.MainTab
 import com.tuji.photo.ui.components.MainTabBar
+import com.tuji.photo.ui.icons.PhotoIcon
+import com.tuji.photo.ui.icons.PhotoIconName
 import com.tuji.photo.ui.theme.LocalAppPalette
 
 @Composable
@@ -90,9 +88,10 @@ fun HomeScreen(
                     .border(1.dp, palette.hairline, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(
-                    Icons.Outlined.Settings, contentDescription = "设置",
-                    tint = palette.textSecondary, modifier = Modifier.size(18.dp),
+                PhotoIcon(
+                    PhotoIconName.GEAR,
+                    tint = palette.textSecondary,
+                    modifier = Modifier.size(18.dp),
                 )
             }
         }
@@ -142,7 +141,11 @@ fun HomeScreen(
                     Text(project.title, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = palette.textPrimary)
                     Text("上次编辑 · ${formatTime(project.lastEditedAt)}", fontSize = 11.sp, color = palette.textSecondary)
                 }
-                Icon(Icons.Outlined.ChevronRight, null, tint = palette.textTertiary, modifier = Modifier.size(16.dp))
+                PhotoIcon(
+                    PhotoIconName.CHEVRON,
+                    tint = palette.textTertiary,
+                    modifier = Modifier.size(16.dp),
+                )
             }
         }
 

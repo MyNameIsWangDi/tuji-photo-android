@@ -68,6 +68,7 @@ class EditorViewModel @Inject constructor(
     val bitmap = MutableStateFlow<ImageBitmap?>(null)
 
     val activeTool = MutableStateFlow<EditorTool?>(null)
+    val showExport = MutableStateFlow(false)
 
     // 调色
     val brightness = MutableStateFlow(0f)
@@ -92,12 +93,109 @@ class EditorViewModel @Inject constructor(
     // 裁剪
     val cropRatio = MutableStateFlow(2)           // 0 自由 / 1 1:1 / 2 3:4 / 3 4:3 / 4 16:9
     val rotation = MutableStateFlow(0)            // 0/1/2/3 × 90°
+    val cropRect = MutableStateFlow(CropRect())
+    val cropAspectLocked = MutableStateFlow<Float?>(nullf)
+
+    /** 比例 chips → 锁定裁剪宽高比。 */
+    fun setCropRatio(index: Int) {
+        cropRatio.value = index
+        cropAspectLocked.value = when (index) {
+            1 -> 1f
+            2 -> 3f / 4f
+            3 -> 4f / 3f
+            4 -> 16f / 9f
+            else -> null
+        }
+    }
+
+    fun updateCropRect(rect: CropRect) {
+        cropRect.value = rect
+    }
 
     // 文字
     val textContent = MutableStateFlow("山湖暮色 · 2026")
     val textFont = MutableStateFlow(0)
     val textColorIndex = MutableStateFlow(0)
     val textSize = MutableStateFlow(16f)
+
+    /* ---------- 画布叠加元素（文字 / 贴纸） ---------- */
+    val overlays = MutableStateFlow<List<OverlayElement>>(emptyList())
+    val selectedOverlayId = MutableStateFlow<Long?>(null)
+    val snapEnabled = MutableStateFlow(true)
+    val snapRangePx = MutableStateFlow(24f)
+    val freeMode = MutableStateFlow(false)
+
+    /** 设计稿 08 屏的贴纸图标集。 */
+    val stickerGlyphs = listOf("★", "♥", "⌖", "日", "▣")
+
+    private var nextOverlayId = 1L
+
+    /** 设计稿 08 屏的贴纸图标集。 */
+    val stickerGlyphs = listOf("★", "♥", "⌖", "日", "▣")
+
+    /** 边框面板「+ 文字」：把文字拖入画布并开启自由摆放。 */
+    fun addTextOverlay(content: String, sizeSp: Float = 16f) {
+        val element = OverlayElement(
+            id = nextOverlayId++,
+            kind = OverlayKind.TEXT,
+            content = content.ifBlank { textContent.value },
+            x = 0.5f, y = 0.5f,
+            snappedAnchor = 4,
+            fontSizeSp = sizeSp,
+        )
+        overlays.value = overlays.value + element
+        selectedOverlayId.value = element.id
+        freeMode.value = true
+    }
+
+    /** 边框面板「+ 贴纸」：贴纸进入画布并自动吸附中心。 */
+    fun addStickerOverlay(glyph: String) {
+        val element = OverlayElement(
+            id = nextOverlayId++,
+            kind = OverlayKind.STICKER,
+            content = glyph,
+            x = 0.5f, y = 0.5f,
+            snappedAnchor = 4,
+        )
+        overlays.value = overlays.value + element
+        selectedOverlayId.value = element.id
+        freeMode.value = true
+    }
+
+    fun moveOverlay(id: Long, deltaX: Float, deltaY: Float) {
+        overlays.value = overlays.value.map { element ->
+            if (element.id != id) element
+            else element.copy(
+                x = (element.x + deltaX).coerceIn(0f, 1f),
+                y = (element.y + deltaY).coerceIn(0f, 1f),
+                snappedAnchor = -1,
+            )
+        }
+    }
+
+    /** 拖动结束：命中锚点则吸附。 */
+    fun snapOverlay(id: Long, anchorIndex: Int) {
+        if (anchorIndex < 0) {
+            overlays.value = overlays.value.map {
+                if (it.id == id) it.copy(snappedAnchor = -1) else it
+            }
+            return
+        }
+        val (ax, ay) = Anchors.POINTS[anchorIndex]
+        overlays.value = overlays.value.map { element ->
+            if (element.id != id) element
+            else element.copy(x = ax, y = ay, snappedAnchor = anchorIndex)
+        }
+    }
+
+    fun selectOverlay(id: Long?) {
+        selectedOverlayId.value = id
+    }
+
+    fun removeOverlay(id: Long) {
+        overlays.value = overlays.value.filterNot { it.id == id }
+        if (selectedOverlayId.value == id) selectedOverlayId.value = null
+    }
 
     val filterPresets = listOf(
         FilterPreset("原图", "全部", 1f, 0f, 0f),

@@ -291,16 +291,39 @@ internal fun BorderPanel(viewModel: EditorViewModel) {
     }
 
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        listOf("+ 文字", "贴纸").forEach { label ->
+        listOf("+ 文字", "+ 贴纸").forEach { label ->
             Box(
                 Modifier
                     .height(32.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .border(1.dp, palette.hairline, RoundedCornerShape(16.dp))
+                    .clickable {
+                        if (label == "+ 文字") {
+                            viewModel.addTextOverlay(viewModel.textContent.value)
+                        } else {
+                            viewModel.addStickerOverlay(viewModel.stickerGlyphs.first())
+                        }
+                    }
                     .padding(horizontal = 14.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(label, fontSize = 12.sp, color = palette.textPrimary)
+            }
+        }
+    }
+    // 贴纸图标行（设计稿 08 屏）
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        viewModel.stickerGlyphs.forEach { glyph ->
+            Box(
+                Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(palette.background)
+                    .border(1.dp, palette.hairline, RoundedCornerShape(10.dp))
+                    .clickable { viewModel.addStickerOverlay(glyph) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(glyph, fontSize = 16.sp, color = palette.textPrimary)
             }
         }
     }
@@ -327,7 +350,7 @@ internal fun CropPanel(viewModel: EditorViewModel) {
                     .clip(RoundedCornerShape(16.dp))
                     .background(if (selected) palette.accent else palette.background)
                     .border(1.dp, if (selected) palette.accent else palette.hairline, RoundedCornerShape(16.dp))
-                    .clickable { viewModel.cropRatio.value = i }
+                    .clickable { viewModel.setCropRatio(i) }
                     .padding(horizontal = 12.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -375,6 +398,8 @@ internal fun TextPanel(viewModel: EditorViewModel) {
     val colorIndex by viewModel.textColorIndex.collectAsState()
     val size by viewModel.textSize.collectAsState()
     val content by viewModel.textContent.collectAsState()
+    val snapOn by viewModel.snapEnabled.collectAsState()
+    val snapRange by viewModel.snapRangePx.collectAsState()
 
     SecondaryChipRow(listOf("文本", "标签", "贴字", "艺术字"), mode) { mode = it }
     Text(
@@ -384,7 +409,54 @@ internal fun TextPanel(viewModel: EditorViewModel) {
             .clip(RoundedCornerShape(8.dp))
             .background(palette.background)
             .border(1.dp, palette.hairline, RoundedCornerShape(8.dp))
+            .clickable { viewModel.addTextOverlay(content, size) }
             .padding(12.dp),
+    )
+    // 贴纸图标行（设计稿 08 屏）
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        viewModel.stickerGlyphs.forEach { glyph ->
+            Box(
+                Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(palette.background)
+                    .border(1.dp, palette.hairline, RoundedCornerShape(10.dp))
+                    .clickable { viewModel.addStickerOverlay(glyph) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(glyph, fontSize = 16.sp, color = palette.textPrimary)
+            }
+        }
+    }
+    // 定位吸附开关 + 吸附范围
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text("定位吸附", fontSize = 13.sp, color = palette.textPrimary)
+        Box(
+            Modifier
+                .size(width = 44.dp, height = 26.dp)
+                .clip(RoundedCornerShape(13.dp))
+                .background(if (snapOn) palette.accent else palette.hairline)
+                .clickable { viewModel.snapEnabled.value = !snapOn },
+            contentAlignment = if (snapOn) Alignment.CenterEnd else Alignment.CenterStart,
+        ) {
+            Box(
+                Modifier
+                    .padding(horizontal = 3.dp)
+                    .size(20.dp)
+                    .clip(CircleShape)
+                    .background(if (snapOn) palette.onAccent else palette.textSecondary),
+            )
+        }
+    }
+    ParamSlider(
+        "吸附范围", snapRange,
+        { viewModel.snapRangePx.value = it },
+        valueText = "${snapRange.toInt()}px",
+        valueRange = 8f..64f,
     )
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         listOf("标准", "手写", "衬线").forEachIndexed { i, label ->

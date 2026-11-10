@@ -4,6 +4,7 @@ import android.graphics.ColorMatrix as AndroidColorMatrix
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,15 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.outlined.BrandingWatermark
-import androidx.compose.material.icons.outlined.Contrast
-import androidx.compose.material.icons.outlined.Crop
-import androidx.compose.material.icons.outlined.CropSquare
-import androidx.compose.material.icons.outlined.Title
-import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -42,18 +34,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.foundation.Image
+import com.tuji.photo.ui.export.ExportScreen
+import com.tuji.photo.ui.icons.PhotoIcon
+import com.tuji.photo.ui.icons.PhotoIconName
 import com.tuji.photo.ui.theme.LocalAppPalette
 
-/** 根据四参数 + 滤镜预设合成实时预览 ColorMatrix（真实生效，非截图模拟）。 */
+/** 根据四参数 + 滤镜预设合成实时预览 ColorMatrix（真实生效）。 */
 fun previewMatrix(
     adj: Adjustments,
     preset: FilterPreset?,
@@ -94,6 +86,20 @@ fun EditorScreen(
     val activeTool by viewModel.activeTool.collectAsState()
     val bitmap by viewModel.bitmap.collectAsState()
     val rotation by viewModel.rotation.collectAsState()
+    val borderStyle by viewModel.borderStyle.collectAsState()
+    val borderWidth by viewModel.borderWidth.collectAsState()
+    val cropRatio by viewModel.cropRatio.collectAsState()
+    val overlays by viewModel.overlays.collectAsState()
+    val selectedOverlayId by viewModel.selectedOverlayId.collectAsState()
+    val snapEnabled by viewModel.snapEnabled.collectAsState()
+    val snapRangePx by viewModel.snapRangePx.collectAsState()
+    val freeMode by viewModel.freeMode.collectAsState()
+    val wmStyle by viewModel.watermarkStyle.collectAsState()
+    val wmPosition by viewModel.watermarkPosition.collectAsState()
+    val wmOpacity by viewModel.watermarkOpacity.collectAsState()
+    val cropRect by viewModel.cropRect.collectAsState()
+    val cropAspect by viewModel.cropAspectLocked.collectAsState()
+    val showExport by viewModel.showExport.collectAsState()
 
     val adj = Adjustments(
         viewModel.brightness.collectAsState().value,
@@ -126,9 +132,8 @@ fun EditorScreen(
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    Icons.Filled.Close, contentDescription = "关闭",
-                    tint = palette.textSecondary,
+                PhotoIcon(
+                    PhotoIconName.CLOSE, tint = palette.textSecondary,
                     modifier = Modifier
                         .size(24.dp)
                         .clickable { onClose() },
@@ -141,19 +146,15 @@ fun EditorScreen(
                         .size(width = 56.dp, height = 32.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(palette.accent)
-                        .clickable { viewModel.saveProject(onClose) },
+                        .clickable { viewModel.showExport.value = true },
                     contentAlignment = Alignment.Center,
                 ) {
                     Text("导出", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = palette.onAccent)
                 }
             }
 
-            // 照片画布
-            val borderStyle by viewModel.borderStyle.collectAsState()
-            val borderWidth by viewModel.borderWidth.collectAsState()
-            val cropRatio by viewModel.cropRatio.collectAsState()
+            // 照片画布 + 叠加元素层
             val ratios = listOf(null, 1f, 3f / 4f, 4f / 3f, 16f / 9f)
-
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -162,34 +163,80 @@ fun EditorScreen(
             ) {
                 bitmap?.let { bmp ->
                     val ratio = ratios[cropRatio.coerceIn(0, ratios.lastIndex)]
-                    var imageModifier = Modifier
-                        .padding(24.dp)
-                        .then(
-                            if (ratio != null) Modifier.aspectRatio(ratio) else Modifier
-                        )
-                    // 边框
-                    when (borderStyle) {
-                        1 -> imageModifier = imageModifier
-                            .border(borderWidth.dp, Color.White)
-                            .padding(borderWidth.dp)
-                        2 -> imageModifier = imageModifier
-                            .border(borderWidth.dp, Color.Black)
-                            .padding(borderWidth.dp)
-                        3 -> imageModifier = imageModifier
-                            .clip(RoundedCornerShape(16.dp))
-                        4 -> imageModifier = imageModifier
-                            .background(Color.White)
-                            .padding(horizontal = borderWidth.dp)
-                            .padding(bottom = borderWidth.dp * 5)
+                    Box(
+                        Modifier
+                            .padding(24.dp)
+                            .then(if (ratio != null) Modifier.aspectRatio(ratio) else Modifier),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(
+                            Modifier.then(
+                                when (borderStyle) {
+                                    1 -> Modifier.border(borderWidth.dp, Color.White).padding(borderWidth.dp)
+                                    2 -> Modifier.border(borderWidth.dp, Color.Black).padding(borderWidth.dp)
+                                    3 -> Modifier.clip(RoundedCornerShape(16.dp))
+                                    4 -> Modifier
+                                        .background(Color.White)
+                                        .padding(horizontal = borderWidth.dp)
+                                        .padding(bottom = borderWidth.dp * 5)
+                                    else -> Modifier
+                                }
+                            )
+                        ) {
+                            Box {
+                                Image(
+                                    bitmap = bmp,
+                                    contentDescription = "照片",
+                                    contentScale = ContentScale.Fit,
+                                    colorFilter = ColorFilter.colorMatrix(matrix),
+                                    modifier = Modifier.graphicsLayer {
+                                        rotationZ = rotation * 90f
+                                    },
+                                )
+                                CanvasOverlay(
+                                    elements = overlays,
+                                    freeMode = freeMode,
+                                    snapEnabled = snapEnabled,
+                                    snapRangePx = snapRangePx,
+                                    selectedId = selectedOverlayId,
+                                    onSelect = { viewModel.selectOverlay(it) },
+                                    onDrag = { id, dx, dy -> viewModel.moveOverlay(id, dx, dy) },
+                                    onDragEnd = { id, anchor -> viewModel.snapOverlay(id, anchor) },
+                                    onTapCanvas = { viewModel.freeMode.value = true },
+                                    modifier = Modifier.matchParentSize(),
+                                )
+
+                                // 水印层（设计稿 04 屏：3×3 位置九宫格）
+                                if (activeTool == EditorTool.WATERMARK && wmStyle == 0) {
+                                    WatermarkOverlay(
+                                        text = "© 途记 · 2026",
+                                        anchorIndex = wmPosition,
+                                        alpha = wmOpacity / 100f,
+                                        modifier = Modifier.matchParentSize(),
+                                    )
+                                }
+
+                                // 裁剪层（设计稿 06 屏：三分线 + 四角手柄）
+                                if (activeTool == EditorTool.CROP) {
+                                    CropOverlay(
+                                        rect = cropRect,
+                                        lockedAspect = cropAspect,
+                                        onChange = { viewModel.updateCropRect(it) },
+                                        modifier = Modifier.matchParentSize(),
+                                    )
+                                }
+                            }
+                        }
                     }
-                    Image(
-                        bitmap = bmp,
-                        contentDescription = "照片",
-                        contentScale = ContentScale.Fit,
-                        colorFilter = ColorFilter.colorMatrix(matrix),
-                        modifier = imageModifier.graphicsLayer {
-                            rotationZ = rotation * 90f
-                        },
+                }
+
+                // 已吸附反馈
+                overlays.firstOrNull { it.id == selectedOverlayId }?.let { element ->
+                    SnappedChip(
+                        anchorIndex = element.snappedAnchor,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 16.dp),
                     )
                 }
             }
@@ -214,6 +261,14 @@ fun EditorScreen(
             ) {
                 EditorPanel(viewModel, tool)
             }
+        }
+
+        // 导出页（设计稿 02 屏）：覆盖在编辑器之上
+        if (showExport) {
+            ExportScreen(
+                viewModel = viewModel,
+                onClose = { viewModel.showExport.value = false },
+            )
         }
     }
 }
@@ -242,21 +297,12 @@ fun EditorToolbar(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                val icon = when (tool) {
-                    EditorTool.ADJUST -> Icons.Outlined.Tune
-                    EditorTool.FILTER -> Icons.Outlined.Contrast
-                    EditorTool.WATERMARK -> Icons.Outlined.BrandingWatermark
-                    EditorTool.BORDER -> Icons.Outlined.CropSquare
-                    EditorTool.CROP -> Icons.Outlined.Crop
-                    EditorTool.TEXT -> Icons.Outlined.Title
-                }
-                Icon(
-                    icon,
-                    contentDescription = tool.label,
+                PhotoIcon(
+                    iconFor(tool),
                     tint = if (selected) palette.accent else palette.textSecondary,
                     modifier = Modifier.size(22.dp),
                 )
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
                 Text(
                     tool.label,
                     fontSize = 11.sp,
@@ -266,6 +312,15 @@ fun EditorToolbar(
             }
         }
     }
+}
+
+private fun iconFor(tool: EditorTool): PhotoIconName = when (tool) {
+    EditorTool.ADJUST -> PhotoIconName.ADJUST
+    EditorTool.FILTER -> PhotoIconName.FILTER
+    EditorTool.WATERMARK -> PhotoIconName.WATERMARK
+    EditorTool.BORDER -> PhotoIconName.BORDER
+    EditorTool.CROP -> PhotoIconName.CROP
+    EditorTool.TEXT -> PhotoIconName.TEXT
 }
 
 @Composable

@@ -21,9 +21,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,29 +34,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tuji.photo.data.model.TemplateCatalog
 import com.tuji.photo.ui.theme.AppThemeMode
 import com.tuji.photo.ui.theme.LocalAppPalette
 import com.tuji.photo.ui.theme.ThemeController
 
-private data class TemplateCard(
-    val name: String,
-    val tag: String,
-    val swatch: Color,
-)
-
 @Composable
-fun TemplatesScreen(onBack: () -> Unit) {
+fun TemplatesScreen(
+    onBack: () -> Unit,
+    onOpenPreview: (String) -> Unit = {},
+) {
     val palette = LocalAppPalette.current
     var category by remember { mutableIntStateOf(0) }
 
-    val templates = listOf(
-        TemplateCard("暮色电影感", "滤镜 · 暖阳", Color(0xFFC8A879)),
-        TemplateCard("城市夜行", "滤镜 · 清冷", Color(0xFF6B7A8F)),
-        TemplateCard("海边日落", "滤镜 · 蜜桃", Color(0xFFE89C7C)),
-        TemplateCard("晨间手记", "水印 · 右下", Color(0xFFB8B09A)),
-        TemplateCard("青绿假日", "滤镜 · 青柠", Color(0xFF8FAF8E)),
-        TemplateCard("夜色霓虹", "滤镜 · 浓郁", Color(0xFF9C6B8F)),
-    )
+    val templates = TemplateCatalog.all
 
     Column(
         Modifier
@@ -77,9 +65,8 @@ fun TemplatesScreen(onBack: () -> Unit) {
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                Icons.AutoMirrored.Outlined.ArrowBack,
-                contentDescription = "返回",
+            PhotoIcon(
+                PhotoIconName.BACK,
                 tint = palette.textPrimary,
                 modifier = Modifier
                     .size(24.dp)
@@ -135,13 +122,13 @@ fun TemplatesScreen(onBack: () -> Unit) {
                             .clip(RoundedCornerShape(14.dp))
                             .background(palette.surface)
                             .border(1.dp, palette.hairline, RoundedCornerShape(14.dp))
-                            .clickable { }
+                            .clickable { onOpenPreview(card.id) }
                     ) {
                         Box(
                             Modifier
                                 .fillMaxWidth()
                                 .aspectRatio(1f)
-                                .background(card.swatch.copy(alpha = 0.25f)),
+                                .background(Color(card.swatch).copy(alpha = 0.25f)),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(card.name, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = palette.textPrimary)
