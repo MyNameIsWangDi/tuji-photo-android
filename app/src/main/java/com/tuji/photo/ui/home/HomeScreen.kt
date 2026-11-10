@@ -48,6 +48,7 @@ import com.tuji.photo.ui.theme.LocalAppPalette
 fun HomeScreen(
     onOpenEditor: (Long, String) -> Unit,
     onOpenTemplates: () -> Unit,
+    onOpenMine: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val palette = LocalAppPalette.current
@@ -177,7 +178,11 @@ fun HomeScreen(
         }
 
         // pill 标签栏
-        MainTabBar(active = MainTab.GALLERY, onTemplates = onOpenTemplates)
+        MainTabBar(
+            active = MainTab.GALLERY,
+            onTemplates = onOpenTemplates,
+            onMine = onOpenMine,
+        )
     }
 }
 

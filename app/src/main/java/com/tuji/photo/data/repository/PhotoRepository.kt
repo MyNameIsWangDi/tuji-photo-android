@@ -7,6 +7,8 @@ import androidx.room.withTransaction
 import com.tuji.photo.data.local.EditProjectDao
 import com.tuji.photo.data.local.EditProjectEntity
 import com.tuji.photo.data.local.PhotoDatabase
+import com.tuji.photo.data.model.PhotoTemplate
+import com.tuji.photo.ui.editor.Adjustments
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -57,14 +59,23 @@ class PhotoRepository @Inject constructor(
 
     fun observeLatestProject(): Flow<EditProjectEntity?> = dao.observeLatest()
 
-    suspend fun createProject(imageUri: String): Long {
+    fun observeAllProjects(): Flow<List<EditProjectEntity>> = dao.observeAll()
+
+    suspend fun getProject(id: Long): EditProjectEntity? = dao.getById(id)
+
+    suspend fun createProject(imageUri: String, template: PhotoTemplate? = null): Long {
         val now = System.currentTimeMillis()
         return dao.insert(
             EditProjectEntity(
-                title = "未命名编辑",
+                title = template?.name ?: "未命名编辑",
                 imageUri = imageUri,
+                adjustmentsJson = template?.let {
+                    Adjustments(it.brightness, it.contrast, it.saturation, it.temperature).toJson()
+                } ?: "{}",
                 createdAt = now,
                 lastEditedAt = now,
+                borderStyle = template?.borderStyle ?: 1,
+                watermarkPosition = template?.watermarkPosition ?: 8,
             )
         )
     }

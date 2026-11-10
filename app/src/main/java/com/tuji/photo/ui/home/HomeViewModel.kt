@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.tuji.photo.data.repository.GalleryPhoto
 import com.tuji.photo.data.repository.PhotoRepository
 import com.tuji.photo.data.local.EditProjectEntity
+import com.tuji.photo.data.model.PendingTemplate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,7 +28,8 @@ class HomeViewModel @Inject constructor(
 
     fun createProject(imageUri: String, onCreated: (Long) -> Unit) {
         viewModelScope.launch {
-            onCreated(repository.createProject(imageUri))
+            val template = PendingTemplate.take()
+            onCreated(repository.createProject(imageUri, template))
         }
     }
 }

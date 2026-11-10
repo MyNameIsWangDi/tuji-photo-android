@@ -19,8 +19,17 @@ data class PhotoTemplate(
     val watermarkPosition: Int = 8,
 )
 
-object TemplateCatalog {
-    val all = listOf(
+/**
+ * 待套用的模板：在模板预览页点「使用模板」后暂存，
+ * 用户下一次新建编辑时自动套用（用完即清）。
+ */
+object PendingTemplate {
+    var template: PhotoTemplate? = null
+
+    fun take(): PhotoTemplate? = template.also { template = null }
+}
+
+object TemplateCatalog {    val all = listOf(
         PhotoTemplate(
             id = "dusk_cinema",
             name = "暮色电影感",

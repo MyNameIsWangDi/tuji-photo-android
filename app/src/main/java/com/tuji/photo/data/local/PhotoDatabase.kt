@@ -20,6 +20,10 @@ data class EditProjectEntity(
     val adjustmentsJson: String = "{}",
     val createdAt: Long,
     val lastEditedAt: Long,
+    /** 套用模板时记录的边框样式。 */
+    val borderStyle: Int = 1,
+    /** 套用模板时记录的水印位置（3×3 索引）。 */
+    val watermarkPosition: Int = 8,
 )
 
 @Dao
@@ -31,6 +35,9 @@ interface EditProjectDao {
     @Query("SELECT * FROM edit_projects ORDER BY lastEditedAt DESC")
     fun observeAll(): Flow<List<EditProjectEntity>>
 
+    @Query("SELECT * FROM edit_projects WHERE id = :id LIMIT 1")
+    suspend fun getById(id: Long): EditProjectEntity?
+
     @Insert
     suspend fun insert(project: EditProjectEntity): Long
 
@@ -38,7 +45,7 @@ interface EditProjectDao {
     suspend fun updateAdjustments(id: Long, json: String, editedAt: Long)
 }
 
-@Database(entities = [EditProjectEntity::class], version = 1, exportSchema = false)
+@Database(entities = [EditProjectEntity::class], version = 2, exportSchema = false)
 abstract class PhotoDatabase : RoomDatabase() {
     abstract fun editProjectDao(): EditProjectDao
 }

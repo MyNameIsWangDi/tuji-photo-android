@@ -212,6 +212,24 @@ class EditorViewModel @Inject constructor(
 
     init {
         loadBitmap()
+        loadProject()
+    }
+
+    /** 打开已有项目时，恢复上次的参数与模板设置。 */
+    private fun loadProject() {
+        if (projectId <= 0L) return
+        viewModelScope.launch {
+            val project = repository.getProject(projectId) ?: return@launch
+            val saved = Adjustments.fromJson(project.adjustmentsJson)
+            if (saved != Adjustments()) {
+                brightness.value = saved.brightness
+                contrast.value = saved.contrast
+                saturation.value = saved.saturation
+                temperature.value = saved.temperature
+            }
+            borderStyle.value = project.borderStyle
+            watermarkPosition.value = project.watermarkPosition
+        }
     }
 
     private fun loadBitmap() {

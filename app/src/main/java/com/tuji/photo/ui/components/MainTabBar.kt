@@ -29,6 +29,7 @@ fun MainTabBar(
     active: MainTab,
     onGallery: () -> Unit = {},
     onTemplates: () -> Unit = {},
+    onMine: () -> Unit = {},
 ) {
     val palette = LocalAppPalette.current
     Box(
@@ -59,6 +60,7 @@ fun MainTabBar(
                             when (tab) {
                                 MainTab.GALLERY -> onGallery()
                                 MainTab.TEMPLATES -> onTemplates()
+                                MainTab.MINE -> onMine()
                                 else -> {}
                             }
                         },

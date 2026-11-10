@@ -6,9 +6,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.tuji.photo.data.model.PendingTemplate
 import com.tuji.photo.data.model.TemplateCatalog
 import com.tuji.photo.ui.editor.EditorScreen
 import com.tuji.photo.ui.home.HomeScreen
+import com.tuji.photo.ui.mine.MineScreen
+import com.tuji.photo.ui.settings.SettingsScreen
 import com.tuji.photo.ui.templates.TemplatePreviewScreen
 import com.tuji.photo.ui.templates.TemplatesScreen
 
@@ -16,6 +19,8 @@ object Routes {
     const val HOME = "home"
     const val TEMPLATES = "templates"
     const val TEMPLATE_PREVIEW = "templates/preview?templateId={templateId}"
+    const val MINE = "mine"
+    const val SETTINGS = "settings"
     const val EDITOR = "editor?projectId={projectId}&imageUri={imageUri}"
 
     fun editor(projectId: Long, imageUri: String) =
@@ -34,12 +39,14 @@ fun PhotoNavHost() {
                     navController.navigate(Routes.editor(projectId, imageUri))
                 },
                 onOpenTemplates = { navController.navigate(Routes.TEMPLATES) },
+                onOpenMine = { navController.navigate(Routes.MINE) },
             )
         }
         composable(Routes.TEMPLATES) {
             TemplatesScreen(
                 onBack = { navController.popBackStack() },
                 onOpenPreview = { id -> navController.navigate(Routes.templatePreview(id)) },
+                onOpenMine = { navController.navigate(Routes.MINE) },
             )
         }
         composable(
@@ -54,11 +61,21 @@ fun PhotoNavHost() {
                     template = template,
                     onBack = { navController.popBackStack() },
                     onUse = {
-                        // 使用模板：返回图库，选图后套用模板参数
+                        // 使用模板：暂存模板，回到图库选图后自动套用
+                        PendingTemplate.template = template
                         navController.popBackStack(Routes.HOME, inclusive = false)
                     },
                 )
             }
+        }
+        composable(Routes.MINE) {
+            MineScreen(
+                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                onOpenTemplates = { navController.navigate(Routes.TEMPLATES) },
+            )
+        }
+        composable(Routes.SETTINGS) {
+            SettingsScreen(onBack = { navController.popBackStack() })
         }
         composable(
             Routes.EDITOR,
