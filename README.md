@@ -28,3 +28,16 @@
 ```
 ./gradlew :app:assembleDebug
 ```
+
+### 构建环境（已验证通过的组合）
+
+| 组件 | 版本 | 说明 |
+|---|---|---|
+| JDK | 17 | AGP 8.5 要求 17+；JDK 24 不被 Gradle 8.10 支持 |
+| Gradle | 8.10.2 | wrapper 已包含 |
+| Android SDK | platform 34 + build-tools 34.0.0 | `local.properties` 里配 `sdk.dir` |
+| AGP / Kotlin / KSP | 8.5.2 / 2.0.20 / 2.0.20-1.0.25 | |
+
+构建产物：`app/build/outputs/apk/debug/app-debug.apk`
+
+国内网络建议给 Gradle 加镜像（`~/.gradle/init.d/mirrors.gradle`，阿里云 google/public 源），并把 `GRADLE_USER_HOME` 指到非 C 盘。

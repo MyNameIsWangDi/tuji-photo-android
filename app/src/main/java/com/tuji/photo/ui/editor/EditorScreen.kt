@@ -73,7 +73,7 @@ fun previewMatrix(
             0f, 0f, 0f, 1f, 0f,
         )
     )
-    val sat = AndroidColorMatrix().apply { setToSaturation(satFactor.coerceIn(0f, 2f)) }
+    val sat = AndroidColorMatrix().apply { setSaturation(satFactor.coerceIn(0f, 2f)) }
     val out = AndroidColorMatrix()
     out.setConcat(base, sat)
 
@@ -95,7 +95,7 @@ fun previewMatrix(
         )
         out.setConcat(hueMatrix, out)
     }
-    return ColorMatrix(out.values)
+    return ColorMatrix(out.array)
 }
 
 @Composable
@@ -225,7 +225,7 @@ fun EditorScreen(
                                     onSelect = { viewModel.selectOverlay(it) },
                                     onDrag = { id, dx, dy -> viewModel.moveOverlay(id, dx, dy) },
                                     onDragEnd = { id, anchor -> viewModel.snapOverlay(id, anchor) },
-                                    onTapCanvas = { viewModel.freeMode.value = true },
+                                    onTapCanvas = { _, _ -> viewModel.freeMode.value = true },
                                     modifier = Modifier.matchParentSize(),
                                 )
 

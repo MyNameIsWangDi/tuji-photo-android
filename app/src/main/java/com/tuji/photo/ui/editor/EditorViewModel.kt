@@ -103,7 +103,7 @@ class EditorViewModel @Inject constructor(
     val cropRatio = MutableStateFlow(2)           // 0 自由 / 1 1:1 / 2 3:4 / 3 4:3 / 4 16:9
     val rotation = MutableStateFlow(0)            // 0/1/2/3 × 90°
     val cropRect = MutableStateFlow(CropRect())
-    val cropAspectLocked = MutableStateFlow<Float?>(nullf)
+    val cropAspectLocked = MutableStateFlow<Float?>(null)
 
     /** 比例 chips → 锁定裁剪宽高比。 */
     fun setCropRatio(index: Int) {

@@ -402,8 +402,8 @@ internal fun CropPanel(viewModel: EditorViewModel) {
                     .border(1.dp, palette.hairline, RoundedCornerShape(12.dp))
                     .clickable {
                         when (i) {
-                            0 -> viewModel.rotation.value = (rotation.value + 3) % 4
-                            1 -> viewModel.rotation.value = (rotation.value + 1) % 4
+                            0 -> viewModel.rotation.value = (rotation + 3) % 4
+                            1 -> viewModel.rotation.value = (rotation + 1) % 4
                             3 -> viewModel.rotation.value = 0
                         }
                     },

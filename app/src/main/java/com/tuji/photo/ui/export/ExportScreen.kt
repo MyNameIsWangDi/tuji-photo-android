@@ -193,7 +193,7 @@ fun ExportScreen(
                     .clip(RoundedCornerShape(12.dp))
                     .background(palette.accent)
                     .clickable {
-                        val source = bitmap.value?.asAndroidBitmap() ?: return@clickable
+                        val source = bitmap?.asAndroidBitmap() ?: return@clickable
                         scope.launch {
                             val result = withContext(Dispatchers.IO) {
                                 saveToGallery(
@@ -229,7 +229,7 @@ fun ExportScreen(
                         .background(palette.surface)
                         .border(1.dp, palette.hairline, RoundedCornerShape(12.dp))
                         .clickable {
-                            val source = bitmap.value?.asAndroidBitmap() ?: return@clickable
+                            val source = bitmap?.asAndroidBitmap() ?: return@clickable
                             scope.launch {
                                 val uri = withContext(Dispatchers.IO) {
                                     saveToGallery(

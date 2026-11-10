@@ -35,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tuji.photo.data.model.TemplateCatalog
+import com.tuji.photo.ui.icons.PhotoIcon
+import com.tuji.photo.ui.icons.PhotoIconName
 import com.tuji.photo.ui.theme.AppThemeMode
 import com.tuji.photo.ui.theme.LocalAppPalette
 import com.tuji.photo.ui.theme.ThemeController

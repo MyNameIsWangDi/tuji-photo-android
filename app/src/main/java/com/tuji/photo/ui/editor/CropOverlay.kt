@@ -15,6 +15,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -218,23 +219,21 @@ fun WatermarkOverlay(
             val h = size.height
             val cx = ax * w
             val cy = ay * h
-            drawContext.canvas.nativeCanvas.apply {
-                val paint = android.graphics.Paint().apply {
-                    isAntiAlias = true
-                    color = android.graphics.Color.WHITE
-                    this.alpha = (alpha * 255).toInt()
-                    textSize = 13f * density
-                    typeface = android.graphics.Typeface.DEFAULT_BOLD
-                    textAlign = when (ax) {
-                        0f -> android.graphics.Paint.Align.LEFT
-                        1f -> android.graphics.Paint.Align.CENTER
-                        else -> android.graphics.Paint.Align.RIGHT
-                    }
-                    setShadowLayer(6f * density, 0f, 1f * density, 0x66000000)
+            val paint = android.graphics.Paint().apply {
+                isAntiAlias = true
+                color = android.graphics.Color.WHITE
+                this.alpha = (alpha * 255).toInt()
+                textSize = 13f * density
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                textAlign = when (ax) {
+                    0f -> android.graphics.Paint.Align.LEFT
+                    1f -> android.graphics.Paint.Align.CENTER
+                    else -> android.graphics.Paint.Align.RIGHT
                 }
-                val baseline = cy + paint.textSize / 3f
-                drawText(text, cx, baseline, paint)
+                setShadowLayer(6f * density, 0f, 1f * density, 0x66000000)
             }
+            val baseline = cy + paint.textSize / 3f
+            drawContext.canvas.nativeCanvas.drawText(text, cx, baseline, paint)
         }
     }
 }
