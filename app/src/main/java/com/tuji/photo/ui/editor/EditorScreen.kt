@@ -118,6 +118,7 @@ fun EditorScreen(
     val snapRangePx by viewModel.snapRangePx.collectAsState()
     val freeMode by viewModel.freeMode.collectAsState()
     val wmStyle by viewModel.watermarkStyle.collectAsState()
+    val wmImage by viewModel.watermarkImage.collectAsState()
     val wmPosition by viewModel.watermarkPosition.collectAsState()
     val wmOpacity by viewModel.watermarkOpacity.collectAsState()
     val cropRect by viewModel.cropRect.collectAsState()
@@ -242,6 +243,14 @@ fun EditorScreen(
                                 if (activeTool == EditorTool.WATERMARK && wmStyle == 0) {
                                     WatermarkOverlay(
                                         text = "© 途记 · 2026",
+                                        anchorIndex = wmPosition,
+                                        alpha = wmOpacity / 100f,
+                                        modifier = Modifier.matchParentSize(),
+                                    )
+                                }
+                                if (activeTool == EditorTool.WATERMARK && wmStyle == 1 && wmImage != null) {
+                                    ImageWatermarkOverlay(
+                                        bitmap = wmImage!!,
                                         anchorIndex = wmPosition,
                                         alpha = wmOpacity / 100f,
                                         modifier = Modifier.matchParentSize(),

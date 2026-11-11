@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -241,6 +242,11 @@ internal fun WatermarkPanel(viewModel: EditorViewModel) {
 
     SecondaryChipRow(listOf("预设", "自定义", "时间戳", "定位"), preset) { preset = it }
 
+    // 图片水印：调起系统选图
+    val imagePicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
+    ) { uri -> uri?.let { viewModel.setWatermarkImage(it.toString()) } }
+
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         listOf("文字水印", "图片水印").forEachIndexed { i, label ->
             val selected = i == style
@@ -250,7 +256,16 @@ internal fun WatermarkPanel(viewModel: EditorViewModel) {
                     .clip(RoundedCornerShape(16.dp))
                     .background(if (selected) palette.background else palette.background)
                     .border(1.dp, if (selected) palette.accent else palette.hairline, RoundedCornerShape(16.dp))
-                    .clickable { viewModel.watermarkStyle.value = i }
+                    .clickable {
+                        viewModel.watermarkStyle.value = i
+                        if (i == 1) {
+                            imagePicker.launch(
+                                androidx.activity.result.PickVisualMediaRequest(
+                                    androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
+                                )
+                            )
+                        }
+                    }
                     .padding(horizontal = 14.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -259,8 +274,47 @@ internal fun WatermarkPanel(viewModel: EditorViewModel) {
         }
     }
 
-    Text("© 途记 · 2026", fontSize = 13.sp, color = palette.textPrimary)
-    Text("编辑", fontSize = 12.sp, color = palette.textTertiary)
+    if (style == 1) {
+        val wmImage by viewModel.watermarkImage.collectAsState()
+        Box(
+            Modifier
+                .height(56.dp)
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(palette.background)
+                .border(1.dp, palette.hairline, RoundedCornerShape(8.dp))
+                .clickable {
+                    imagePicker.launch(
+                        androidx.activity.result.PickVisualMediaRequest(
+                            androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
+                        )
+                    )
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            if (wmImage != null) {
+                androidx.compose.foundation.Image(
+                    bitmap = wmImage!!,
+                    contentDescription = "水印图片",
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(8.dp)),
+                )
+                Text(
+                    "点击更换",
+                    fontSize = 11.sp,
+                    color = palette.textSecondary,
+                    modifier = Modifier.padding(start = 76.dp),
+                )
+            } else {
+                Text("选择水印图片", fontSize = 12.sp, color = palette.textSecondary)
+            }
+        }
+    } else {
+        Text("© 途记 · 2026", fontSize = 13.sp, color = palette.textPrimary)
+        Text("编辑", fontSize = 12.sp, color = palette.textTertiary)
+    }
 
     // 3×3 位置九宫格
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {

@@ -92,6 +92,8 @@ class EditorViewModel @Inject constructor(
 
     // 水印
     val watermarkStyle = MutableStateFlow(0)      // 0 文字 / 1 图片
+    val watermarkImageUri = MutableStateFlow<String?>(null)
+    val watermarkImage = MutableStateFlow<ImageBitmap?>(null)
     val watermarkPosition = MutableStateFlow(8)   // 3x3 位置索引，默认右下
     val watermarkOpacity = MutableStateFlow(60f)
 
@@ -279,6 +281,19 @@ class EditorViewModel @Inject constructor(
                 BitmapFactory.decodeStream(it, null, opts)?.asImageBitmap()
             }
         }.getOrNull()
+    }
+
+    /** 水印「图片水印」：选图后作为水印素材。 */
+    fun setWatermarkImage(uri: String) {
+        watermarkImageUri.value = uri
+        viewModelScope.launch {
+            watermarkImage.value = withContext(Dispatchers.IO) { decodeSampled(uri) }
+        }
+    }
+
+    fun clearWatermarkImage() {
+        watermarkImageUri.value = null
+        watermarkImage.value = null
     }
 
     fun toggleTool(tool: EditorTool) {

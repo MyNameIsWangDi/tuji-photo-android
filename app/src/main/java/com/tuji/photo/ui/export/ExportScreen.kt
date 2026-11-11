@@ -35,6 +35,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,6 +85,8 @@ fun ExportScreen(
     val wmPosition by viewModel.watermarkPosition.collectAsState()
     val wmOpacity by viewModel.watermarkOpacity.collectAsState()
     val wmStyle by viewModel.watermarkStyle.collectAsState()
+    val wmImage by viewModel.watermarkImage.collectAsState()
+    var showOriginal by remember { mutableStateOf(false) }
 
     val adj = Adjustments(
         viewModel.brightness.collectAsState().value,
@@ -148,9 +156,16 @@ fun ExportScreen(
                         bitmap = bmp,
                         contentDescription = "预览",
                         contentScale = ContentScale.Fit,
+                        colorFilter = if (showOriginal) null else ColorFilter.colorMatrix(matrix),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .aspectRatio(1f),
+                            .aspectRatio(1f)
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onLongPress = { showOriginal = true },
+                                    onTap = { showOriginal = false },
+                                )
+                            },
                     )
                 }
             }
@@ -206,6 +221,7 @@ fun ExportScreen(
                                     watermark = if (wmStyle == 0) "© 途记 · 2026" else null,
                                     watermarkAnchor = wmPosition,
                                     watermarkAlpha = wmOpacity / 100f,
+                                    watermarkImage = if (wmStyle == 1) wmImage?.asAndroidBitmap() else null,
                                 )
                             }
                             android.widget.Toast.makeText(
@@ -242,6 +258,7 @@ fun ExportScreen(
                                         watermark = if (wmStyle == 0) "© 途记 · 2026" else null,
                                         watermarkAnchor = wmPosition,
                                         watermarkAlpha = wmOpacity / 100f,
+                                        watermarkImage = if (wmStyle == 1) wmImage?.asAndroidBitmap() else null,
                                     )
                                 }
                                 if (uri != null) {
@@ -289,6 +306,7 @@ fun saveToGallery(
     watermark: String?,
     watermarkAnchor: Int,
     watermarkAlpha: Float,
+    watermarkImage: android.graphics.Bitmap? = null,
 ): Uri? {
     val composed = composeBitmap(
         source = source,
@@ -344,6 +362,7 @@ fun composeBitmap(
     watermark: String?,
     watermarkAnchor: Int,
     watermarkAlpha: Float,
+    watermarkImage: android.graphics.Bitmap? = null,
 ): Bitmap? = runCatching {
     val borderPx = (borderWidth * source.width / 400f).toInt().coerceAtLeast(0)
     val outW = source.width + borderPx * 2
@@ -382,7 +401,19 @@ fun composeBitmap(
         }
     }
 
-    // 水印
+    // 图片水印
+    if (watermarkImage != null && watermarkAlpha > 0f) {
+        val (ax, ay) = Anchors.POINTS[watermarkAnchor.coerceIn(0, 8)]
+        val size = source.width / 4.4f
+        val left = borderPx + ax * source.width - size / 2f
+        val top = borderPx + ay * source.height - size / 2f
+        val wmPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            alpha = (watermarkAlpha * 255).toInt()
+        }
+        canvas.drawBitmap(watermarkImage, null, android.graphics.RectF(left, top, left + size, top + size), wmPaint)
+    }
+
+    // 文字水印
     if (!watermark.isNullOrBlank() && watermarkAlpha > 0f) {
         val (ax, ay) = Anchors.POINTS[watermarkAnchor.coerceIn(0, 8)]
         val wmPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {

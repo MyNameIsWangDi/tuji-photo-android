@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -234,6 +235,50 @@ fun WatermarkOverlay(
             }
             val baseline = cy + paint.textSize / 3f
             drawContext.canvas.nativeCanvas.drawText(text, cx, baseline, paint)
+        }
+    }
+}
+
+
+/**
+ * 图片水印叠加层：按 3×3 位置九宫格把水印图片画在画布上。
+ */
+@Composable
+fun ImageWatermarkOverlay(
+    bitmap: androidx.compose.ui.graphics.ImageBitmap,
+    anchorIndex: Int,
+    alpha: Float,
+    modifier: Modifier = Modifier,
+) {
+    if (alpha <= 0f) return
+    val (ax, ay) = Anchors.POINTS[anchorIndex.coerceIn(0, 8)]
+
+    Box(modifier.fillMaxSize()) {
+        val density = LocalDensity.current
+        Canvas(Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            val target = minOf(w, h) * 0.22f
+            val left = when (ax) {
+                0f -> 0f
+                1f -> (w - target) / 2f
+                else -> w - target
+            }
+            val top = when (ay) {
+                0f -> 0f
+                1f -> (h - target) / 2f
+                else -> h - target
+            }
+            drawImage(
+                image = bitmap,
+                dstOffset = androidx.compose.ui.unit.IntOffset(
+                    left.toInt(), top.toInt()
+                ),
+                dstSize = androidx.compose.ui.unit.IntSize(
+                    target.toInt(), target.toInt()
+                ),
+                alpha = alpha,
+            )
         }
     }
 }
