@@ -25,10 +25,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tuji.photo.data.model.PhotoTemplate
+import com.tuji.photo.ui.editor.Adjustments
+import com.tuji.photo.ui.editor.previewMatrix
 import com.tuji.photo.ui.icons.PhotoIcon
 import com.tuji.photo.ui.icons.PhotoIconName
 import com.tuji.photo.ui.theme.LocalAppPalette
@@ -41,8 +50,20 @@ fun TemplatePreviewScreen(
     template: PhotoTemplate,
     onBack: () -> Unit,
     onUse: () -> Unit,
+    viewModel: TemplatesViewModel = hiltViewModel(),
 ) {
     val palette = LocalAppPalette.current
+    val coverUri by viewModel.coverUri.collectAsState()
+    val templateMatrix = remember(template.id) {
+        previewMatrix(
+            Adjustments(
+                template.brightness, template.contrast,
+                template.saturation, template.temperature,
+            ),
+            null,
+            100f,
+        )
+    }
 
     Column(
         Modifier
@@ -81,6 +102,16 @@ fun TemplatePreviewScreen(
                 .border(1.dp, palette.hairline, RoundedCornerShape(12.dp)),
             contentAlignment = Alignment.Center,
         ) {
+            // 真实照片 + 模板调色效果预览
+            coverUri?.let { uri ->
+                AsyncImage(
+                    model = uri,
+                    contentDescription = template.name,
+                    contentScale = ContentScale.Crop,
+                    colorFilter = ColorFilter.colorMatrix(templateMatrix),
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
             Text(
                 template.name,
                 fontSize = 18.sp,

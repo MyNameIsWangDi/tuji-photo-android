@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +32,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,9 +51,11 @@ fun TemplatesScreen(
     onOpenPreview: (String) -> Unit = {},
     onOpenMine: () -> Unit = {},
     onOpenRecent: () -> Unit = {},
+    viewModel: TemplatesViewModel = hiltViewModel(),
 ) {
     val palette = LocalAppPalette.current
     var category by remember { mutableIntStateOf(0) }
+    val coverUri by viewModel.coverUri.collectAsState()
 
     val templates = TemplateCatalog.all
 
@@ -135,7 +141,26 @@ fun TemplatesScreen(
                                 .background(Color(card.swatch).copy(alpha = 0.25f)),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(card.name, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = palette.textPrimary)
+                            // 真实照片封面 + 模板色调叠加
+                            coverUri?.let { uri ->
+                                AsyncImage(
+                                    model = uri,
+                                    contentDescription = card.name,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                                Box(
+                                    Modifier
+                                        .fillMaxSize()
+                                        .background(Color(card.swatch).copy(alpha = 0.22f))
+                                )
+                            }
+                            Text(
+                                card.name,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = palette.textPrimary,
+                            )
                         }
                         Column(Modifier.padding(12.dp)) {
                             Text(card.name, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = palette.textPrimary)

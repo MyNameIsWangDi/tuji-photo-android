@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -169,6 +170,7 @@ internal fun FilterPanel(viewModel: EditorViewModel) {
     }
     val selectedFilter by viewModel.selectedFilter.collectAsState()
     val strength by viewModel.filterStrength.collectAsState()
+    val currentBitmap by viewModel.bitmap.collectAsState()
 
     val categories = listOf("全部", "胶片", "黑白", "电影", "风景")
     SecondaryChipRow(categories, category) { category = it }
@@ -195,10 +197,28 @@ internal fun FilterPanel(viewModel: EditorViewModel) {
                         .clickable { viewModel.selectedFilter.value = originalIndex },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(preset.name.take(1), color = palette.textSecondary, fontSize = 18.sp)
+                    // 真实照片缩略图 + 该预设的实时效果
+                    val thumb = currentBitmap
+                    if (thumb != null) {
+                        androidx.compose.foundation.Image(
+                            bitmap = thumb,
+                            contentDescription = preset.name,
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            colorFilter = androidx.compose.ui.graphics.ColorFilter.colorMatrix(
+                                previewMatrix(Adjustments(), preset, 100f)
+                            ),
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    } else {
+                        Text(preset.name.take(1), color = palette.textSecondary, fontSize = 18.sp)
+                    }
                 }
                 androidx.compose.foundation.layout.Spacer(Modifier.size(4.dp))
-                Text(preset.name, fontSize = 11.sp, color = palette.textSecondary)
+                Text(
+                    preset.name,
+                    fontSize = 11.sp,
+                    color = if (originalIndex == selectedFilter) palette.textPrimary else palette.textSecondary,
+                )
             }
         }
     }
@@ -274,6 +294,7 @@ internal fun BorderPanel(viewModel: EditorViewModel) {
     val style by viewModel.borderStyle.collectAsState()
     val width by viewModel.borderWidth.collectAsState()
     val colorIndex by viewModel.borderColorIndex.collectAsState()
+    val borderBitmap by viewModel.bitmap.collectAsState()
 
     SecondaryChipRow(listOf("基础", "胶片", "拍立得", "装饰"), category) { category = it }
 
@@ -284,14 +305,30 @@ internal fun BorderPanel(viewModel: EditorViewModel) {
                     Modifier
                         .size(56.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(palette.background)
+                        .background(if (i == 1 || i == 4) Color.White else palette.background)
                         .border(
                             if (i == style) 2.dp else 1.dp,
                             if (i == style) palette.accent else palette.hairline,
                             RoundedCornerShape(10.dp),
                         )
-                        .clickable { viewModel.borderStyle.value = i },
-                )
+                        .clickable { viewModel.borderStyle.value = i }
+                        .padding(if (i == 1 || i == 2) 4.dp else 0.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    val thumb = borderBitmap
+                    if (thumb != null) {
+                        androidx.compose.foundation.Image(
+                            bitmap = thumb,
+                            contentDescription = label,
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(if (i == 3) 20.dp else 4.dp)),
+                        )
+                    } else {
+                        Text(label.take(1), color = palette.textSecondary, fontSize = 14.sp)
+                    }
+                }
                 androidx.compose.foundation.layout.Spacer(Modifier.size(4.dp))
                 Text(label, fontSize = 11.sp, color = palette.textSecondary)
             }
